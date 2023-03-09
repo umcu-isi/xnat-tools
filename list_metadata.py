@@ -43,12 +43,12 @@ def list_metadata(
                 raise KeyError('XNAT subject does not exist in this project.')
 
         exclusions = exclusions or []
-        for subject in subjects:
+        for i, subject in enumerate(subjects, 1):
             experiments = project_data.subjects[subject].experiments
-            print(f'Adding data for subject {subject}')
+            print(f'Adding data for subject {project_data.subjects[subject].label} ({i}/{len(subjects)})')
 
             if mapping:
-                mapped_scans = get_mapped_scans(experiments, mapping, exclusions=exclusions)
+                mapped_scans = get_mapped_scans(experiments, mapping, exclusions=exclusions, allow_incomplete=True)
                 for key, scans in mapped_scans.items():
                     for scan in scans:
                         for attribute, value in scan.data.items():
@@ -63,7 +63,6 @@ def list_metadata(
                         scan = experiment_data.scans[scan_id]
                         if any(match_scan(scan, rule) for rule in exclusions):
                             # This scan should be excluded.
-                            print(f'Excluding {scan_id}')
                             continue
 
                         for attribute, value in scan.data.items():

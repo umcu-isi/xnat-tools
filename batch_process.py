@@ -1,21 +1,14 @@
 import json
 import os
 import subprocess
-import sys
 from getpass import getpass
 from tempfile import TemporaryDirectory
-from typing import List, Dict, Optional, Callable, Union
+from typing import List, Optional
 
 import click as click
 import xnat
-from xnat.mixin import ImageScanData
 
-from utilities import get_mapped_scans, download_scan, match_scan
-
-RegexRule = Dict[str, str]
-FunctionRule = Callable[[ImageScanData], bool]
-Mapping = Dict[str, Union[RegexRule, FunctionRule]]
-Exclusions = List[RegexRule]
+from utilities import Mapping, Exclusions, get_mapped_scans, download_scan, match_scan
 
 
 def batch_process(
@@ -64,14 +57,12 @@ def batch_process(
                             scan = experiment_data.scans[scan_id]
                             if any(match_scan(scan, rule) for rule in exclusions):
                                 # This scan should be excluded.
-                                print(f'Excluding {scan_id}')
                                 continue
 
                             scan_path = os.path.join(tmpdir, experiment_id, scan_id)
                             download_scan(scan, scan_path)
 
                 subprocess.run(command, cwd=tmpdir, shell=True)
-                sys.exit(0)
 
 
 @click.command()

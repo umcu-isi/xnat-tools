@@ -10,7 +10,7 @@ from xnat.mixin import ImageScanData
 RegexRule = Dict[str, str]
 FunctionRule = Callable[[ImageScanData], bool]
 Mapping = Dict[str, Union[RegexRule, FunctionRule]]
-Exclusions = List[RegexRule]
+Exclusions = List[Union[RegexRule, FunctionRule]]
 
 
 def match_scan(scan: ImageScanData, rule: Union[RegexRule, FunctionRule]):
@@ -23,30 +23,33 @@ def match_scan(scan: ImageScanData, rule: Union[RegexRule, FunctionRule]):
 def get_mapped_scans(
         experiments: XNATListing,
         mapping: Mapping,
-        exclusions: List[RegexRule]) -> Dict[str, List[ImageScanData]]:
+        exclusions: Exclusions,
+        allow_incomplete: bool = False) -> Dict[str, List[ImageScanData]]:
     mapped_scans = {key: [] for key in mapping.keys()}
-    series_descriptions = []
+    all_scan_ids = []
     for experiment_id in experiments:
         experiment_data = experiments[experiment_id]
         for scan_id in experiment_data.scans:
             scan = experiment_data.scans[scan_id]
             if any(match_scan(scan, rule) for rule in exclusions):
                 # This scan should be excluded.
-                print(f'Excluding {scan_id}')
                 continue
 
-            series_descriptions.append(scan_id)
+            all_scan_ids.append(scan_id)
             for key, rule in mapping.items():
                 if match_scan(scan, rule):
                     if mapped_scans[key]:
                         other_id = mapped_scans[key][0].id
                         print(f'Match for "{key}" not unique: Both {other_id} and {scan_id} match.')
                     else:
-                        mapped_scans[key] = scan
+                        mapped_scans[key].append(scan)
 
-    missing = [key for key, scans in mapped_scans if not scans]
+    missing = [key for key, scans in mapped_scans.items() if not scans]
     if any(missing):
-        raise Exception('Mapping incomplete', f'Missing {missing} in {series_descriptions}')
+        if allow_incomplete:
+            print('Mapping incomplete', f'Missing {missing} in {all_scan_ids}')
+        else:
+            raise Exception('Mapping incomplete', f'Missing {missing} in {all_scan_ids}')
 
     return mapped_scans
 
