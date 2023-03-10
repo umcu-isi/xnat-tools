@@ -19,14 +19,14 @@ def batch_process(
         mapping: Optional[Mapping] = None,
         exclusions: Optional[Exclusions] = None):
     """
+    Downloads scans from Xnat and runs a shell command.
 
-    :param url:
-    :param project: Can be either the project name or XNAT id.
-    :param command:
-    :param subjects: Can be either the DICOM patient name or XNAT subject id.
-    :param mapping:
-    :param exclusions:
-    :return:
+    :param url: Xnat server URL
+    :param project: Either the project name or XNAT id.
+    :param command: The shell command to execute after the scans have been downloaded.
+    :param subjects: A list of either DICOM patient names or XNAT subject IDs.
+    :param mapping: A dictionary mapping a scan type to a set of rules.
+    :param exclusions: A list of rules for excluding scans.
     """
     user = input('Username: ')
     with xnat.connect(url, user=user, password=getpass()) as session:
@@ -68,6 +68,11 @@ def batch_process(
 @click.command()
 @click.argument("config_file", type=click.Path(exists=True, dir_okay=False))
 def batch_process_from_config(config_file: str):
+    """
+    Downloads scans from Xnat and runs a shell command.
+
+    :param config_file: A JSON file containing at least the Xnat server URL, project name and shell command.
+    """
     with open(config_file, 'r') as file:
         data = json.load(file)
     batch_process(
