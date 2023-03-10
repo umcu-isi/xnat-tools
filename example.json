@@ -1,0 +1,15 @@
+{
+  "url": "https://central.xnat.org",
+  "project": "HumanCT",
+  "command": "dir",
+  "subjects": [
+    "VHFCT1mm-Ankle",
+    "VHFCT1mm-Head"
+  ],
+  "mapping": {
+    "resampled": {"series_description": ".*1mm.*"}
+  },
+  "exclusions": [
+    {"modality": "MR"}
+  ]
+}

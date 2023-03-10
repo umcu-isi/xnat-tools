@@ -48,7 +48,7 @@ def get_metadata(
     """
     results = {key: {} for key in mapping.keys()} if mapping else {}
     user = input('Username: ')
-    with xnat.connect(url, user=user, password=getpass()) as session:
+    with xnat.connect(url, user=user or None, password=getpass() or None) as session:
         if project not in session.projects:
             raise KeyError('XNAT project does not exist.')
         project_data = session.projects[project]

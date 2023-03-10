@@ -29,7 +29,7 @@ def batch_process(
     :param exclusions: A list of rules for excluding scans.
     """
     user = input('Username: ')
-    with xnat.connect(url, user=user, password=getpass()) as session:
+    with xnat.connect(url, user=user or None, password=getpass() or None) as session:
         if project not in session.projects:
             raise KeyError('XNAT project does not exist.')
         project_data = session.projects[project]

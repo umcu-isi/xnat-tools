@@ -93,10 +93,10 @@ def download_scan(scan: ImageScanData, path: str):
     zip_file = path + '.zip'
 
     print(f'Downloading {scan_label(scan)}: {zip_file}')
+    os.makedirs(path, exist_ok=True)
     scan.download(zip_file)
 
     print(f'Extracting {zip_file} to: {path}')
-    os.makedirs(path, exist_ok=True)
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(path)
 
