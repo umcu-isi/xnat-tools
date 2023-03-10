@@ -15,5 +15,9 @@ setuptools.setup(
     install_requires=[
         'click>=8.1.3',
         'xnat>=0.5.0'],
-    extras_require={}
+    extras_require={},
+    entry_points={
+        'console_scripts': [
+            'xnat-batch=xnat_tools.batch_process:batch_process_from_config',
+            'xnat-metadata=xnat_tools.get_metadata:get_metadata_from_config']}
 )

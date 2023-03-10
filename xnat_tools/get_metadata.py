@@ -5,7 +5,7 @@ from typing import Optional, List, Dict
 import click
 import xnat
 
-from utilities import Mapping, Exclusions, get_mapped_scans, match_scan
+from .utilities import Mapping, Exclusions, get_mapped_scans, match_scan
 
 
 class SetEncoder(json.JSONEncoder):
@@ -96,9 +96,6 @@ def get_metadata_from_config(config_file: str, output_file: str):
     """
     Writes a JSON file containing all values for each metadata attribute found in all scans. If a mapping is given,
     then the results are sorted per mapping.
-
-    :param config_file: A JSON file containing at least the Xnat server URL and a project name.
-    :param output_file: A file name for the JSON file.
     """
     with open(config_file, 'r') as file:
         data = json.load(file)

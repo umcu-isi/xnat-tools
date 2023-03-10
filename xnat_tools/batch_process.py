@@ -8,7 +8,7 @@ from typing import List, Optional
 import click as click
 import xnat
 
-from utilities import Mapping, Exclusions, get_mapped_scans, download_scan, match_scan
+from .utilities import Mapping, Exclusions, get_mapped_scans, download_scan, match_scan
 
 
 def batch_process(
@@ -19,7 +19,9 @@ def batch_process(
         mapping: Optional[Mapping] = None,
         exclusions: Optional[Exclusions] = None):
     """
-    Downloads scans from Xnat and runs a shell command.
+    Downloads scans from Xnat and runs a shell command. The root directory to the downloaded scans is provided as an
+    argument to the shell command. In case a mapping is used, such as {"T1": {"series_description": ".*T1.*"}}, then the
+    mapped scans will be in a subdirectory with the mapping key name ("T1").
 
     :param url: Xnat server URL
     :param project: Either the project name or XNAT id.
@@ -62,7 +64,7 @@ def batch_process(
                             scan_path = os.path.join(tmpdir, experiment_id, scan_id)
                             download_scan(scan, scan_path)
 
-                subprocess.run(command, cwd=tmpdir, shell=True)
+                subprocess.run(command + [tmpdir], shell=True)
 
 
 @click.command()
@@ -70,8 +72,6 @@ def batch_process(
 def batch_process_from_config(config_file: str):
     """
     Downloads scans from Xnat and runs a shell command.
-
-    :param config_file: A JSON file containing at least the Xnat server URL, project name and shell command.
     """
     with open(config_file, 'r') as file:
         data = json.load(file)

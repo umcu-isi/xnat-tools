@@ -67,12 +67,15 @@ def get_mapped_scans(
             scan_labels.append(scan_label(scan))
             for key, rule in mapping.items():
                 if match_scan(scan, rule):
-                    if mapped_scans[key]:
-                        print(f'Match for "{key}" not unique: '
-                              f'Both {scan_label(scan)} and {scan_label(mapped_scans[key][0])} match.')
-                    else:
-                        mapped_scans[key].append(scan)
+                    mapped_scans[key].append(scan)
 
+    # Warn about not unique matches.
+    for key, scans in mapped_scans.items():
+        if len(scans) > 1:
+            labels = [scan_label(scan) for scan in scans]
+            print(f'Multiple matches for {key}: {labels}')
+
+    # Warn about missing scans.
     missing = [key for key, scans in mapped_scans.items() if not scans]
     if any(missing):
         if allow_incomplete:
@@ -97,7 +100,11 @@ def download_scan(scan: ImageScanData, path: str):
     scan.download(zip_file)
 
     print(f'Extracting {zip_file} to: {path}')
-    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        zip_ref.extractall(path)
+    with zipfile.ZipFile(zip_file) as zip_ref:
+        for zip_info in zip_ref.infolist():
+            # Skip directories and extract each file into path.
+            if zip_info.filename[-1] != '/':
+                zip_info.filename = os.path.basename(zip_info.filename)
+                zip_ref.extract(zip_info, path)
 
     os.remove(zip_file)
