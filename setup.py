@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="Xnat tools",
+    name="xnat-tools",
     version="0.1",
     author="Edwin Bennink",
     author_email="H.E.Bennink@umcutrecht.nl",

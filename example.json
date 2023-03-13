@@ -1,7 +1,7 @@
 {
   "url": "https://central.xnat.org",
   "project": "HumanCT",
-  "command": ["dir"],
+  "command": ["cmd", "/c", "dir"],
   "subjects": [
     "VHFCT1mm-Ankle",
     "VHFCT1mm-Head"

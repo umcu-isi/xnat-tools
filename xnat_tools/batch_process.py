@@ -20,8 +20,9 @@ def batch_process(
         exclusions: Optional[Exclusions] = None):
     """
     Downloads scans from Xnat and runs a shell command. The root directory to the downloaded scans is provided as an
-    argument to the shell command. In case a mapping is used, such as {"T1": {"series_description": ".*T1.*"}}, then the
-    mapped scans will be in a subdirectory with the mapping key name ("T1").
+    argument to the shell command, as well is the subject label. In case a mapping is used, such as
+        {"T1": {"series_description": ".*T1.*"}},
+    then the mapped scans will be in a subdirectory with the mapping key name ("T1").
 
     :param url: Xnat server URL
     :param project: Either the project name or XNAT id.
@@ -64,7 +65,16 @@ def batch_process(
                             scan_path = os.path.join(tmpdir, experiment_id, scan_id)
                             download_scan(scan, scan_path)
 
-                subprocess.run(command + [tmpdir], shell=True)
+                cmd = command + [tmpdir, label]
+                print("Running command:", " ".join(cmd))
+                label = project_data.subjects[subject].label
+                output = subprocess.run(cmd, capture_output=True)
+                if output.stderr:
+                    with open(f"{label}.err.log", "wb") as file:
+                        file.write(output.stderr)
+                if output.stdout:
+                    with open(f"{label}.out.log", "wb") as file:
+                        file.write(output.stdout)
 
 
 @click.command()
