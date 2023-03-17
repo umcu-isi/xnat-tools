@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from getpass import getpass
 from tempfile import TemporaryDirectory
 from threading import Event
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import click as click
 import xnat
@@ -19,6 +19,8 @@ class DownloadJob:
         self.subject = subject
         self.tmpdir = tmpdir
         self._event = Event()
+        self.error: Optional[str] = None
+        self.scans: Dict[str, List[str]] = {}
 
     def finish(self):
         self._event.set()
@@ -35,18 +37,16 @@ def process_subject(command: List[str], subject: str, label: str, download_queue
 
         # Wait for downloads to finish and execute the command.
         job.wait()
-
-        cmd = command + [tmpdir, label]
-        print("Running command:", " ".join(cmd))
-        output = subprocess.run(cmd, capture_output=True)
-
-        if output.stderr:
-            with open(f"{label}.err.log", "wb") as file:
-                file.write(output.stderr)
-
-        if output.stdout:
-            with open(f"{label}.out.log", "wb") as file:
-                file.write(output.stdout)
+        with open(f"{label}.log", "w") as logfile:
+            if job.error:
+                logfile.write(f'Error while downloading scans: {job.error}')
+            else:
+                cmd = command + [tmpdir, label]
+                scans = '\n'.join(f'  {key}: {val}' for key, val in job.scans.items())
+                logfile.write(f'Downloaded scans:\n{scans}\n\n')
+                logfile.write(f'Running command: {" ".join(cmd)}\n\n')
+                logfile.flush()
+                subprocess.run(cmd, stdout=logfile, stderr=logfile)
 
 
 def batch_process(
@@ -100,26 +100,31 @@ def batch_process(
             except queue.Empty:
                 continue
 
-            experiments = project_data.subjects[job.subject].experiments
-            if mapping:
-                mapped_scans = get_mapped_scans(experiments, mapping, exclusions=exclusions)
-                for key, scans in mapped_scans.items():
-                    for scan in scans:
-                        scan_path = os.path.join(job.tmpdir, key, scan.id)
-                        download_scan(scan, scan_path)
-            else:
-                for experiment_id in experiments:
-                    experiment_data = experiments[experiment_id]
-                    for scan_id in experiment_data.scans:
-                        scan = experiment_data.scans[scan_id]
-                        if any(match_scan(scan, rule) for rule in exclusions):
-                            # This scan should be excluded.
-                            continue
+            try:
+                experiments = project_data.subjects[job.subject].experiments
+                if mapping:
+                    mapped_scans = get_mapped_scans(experiments, mapping, exclusions=exclusions)
+                    for key, scans in mapped_scans.items():
+                        for scan in scans:
+                            scan_path = os.path.join(job.tmpdir, key, scan.id)
+                            download_scan(scan, scan_path)
+                            job.scans[scan.id] = scan_path
+                else:
+                    for experiment_id in experiments:
+                        experiment_data = experiments[experiment_id]
+                        for scan_id in experiment_data.scans:
+                            scan = experiment_data.scans[scan_id]
+                            if any(match_scan(scan, rule) for rule in exclusions):
+                                # This scan should be excluded.
+                                continue
 
-                        scan_path = os.path.join(job.tmpdir, experiment_id, scan_id)
-                        download_scan(scan, scan_path)
-
-            job.finish()
+                            scan_path = os.path.join(job.tmpdir, experiment_id, scan_id)
+                            download_scan(scan, scan_path)
+                            job.scans[scan.id] = scan_path
+            except Exception as exc:
+                job.error = str(exc)
+            finally:
+                job.finish()
 
     # Wait until all jobs are finished and shutdown.
     executor.shutdown()
