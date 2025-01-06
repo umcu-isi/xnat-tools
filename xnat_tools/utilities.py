@@ -37,7 +37,8 @@ def match_scan(scan: ImageScanData, rule: Union[RegexRule, FunctionRule]):
     if isinstance(rule, Callable):
         return rule(scan)
     else:
-        return all(re.match(pattern, scan.get(attr, '')) for attr, pattern in rule.items())
+        # scan[attr] might contain None values. Convert those to empty strings.
+        return all(re.match(pattern, scan.get(attr) or '') for attr, pattern in rule.items())
 
 
 def get_mapped_scans(
