@@ -55,7 +55,7 @@ This commandline tool writes a [JSON](https://en.wikipedia.org/wiki/JSON) file c
 If a mapping is given, then the results are sorted per mapping.
 The `xnat-metadata` command requires a configuration file with at least an XNAT URL and project name, and optionally a mapping and exclusions. 
 
-Usage: `xnat-metadata CONFIG_FILE`
+Usage: `xnat-metadata CONFIG_FILE OUTPUT_FILE`
 
 
 ### xnat-batch
@@ -65,4 +65,4 @@ The scans matching to the mappings are downloaded to a temporary directory, sort
 The temporary download directory and subject label are appended to the command. For example, `["myscript.sh", "-v"]`, could be executed as `myscript.sh -v /tmp/1234 subj001`.
 The `xnat-batch` command requires a configuration file with at least an XNAT URL, project name, and command, and optionally a mapping and exclusions. 
 
-Usage: `xnat-batch CONFIG_FILE OUTPUT_FILE`
+Usage: `xnat-batch CONFIG_FILE`
