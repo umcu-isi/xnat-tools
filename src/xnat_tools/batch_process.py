@@ -81,10 +81,10 @@ def batch_process(
             raise KeyError('XNAT project does not exist.')
         project_data = session.projects[project]
 
-        subjects = subjects or [*project_data.subjects]
+        subjects = subjects or list(project_data.subjects.keys())
         for subject in subjects:
             if subject not in project_data.subjects:
-                raise KeyError('XNAT subject does not exist in this project.')
+                raise KeyError('XNAT subject does not exist in this project:', subject)
 
         # Schedule jobs for all subjects.
         exclusions = exclusions or []
@@ -110,15 +110,13 @@ def batch_process(
                             download_scan(scan, scan_path)
                             job.scans[scan.id] = scan_path
                 else:
-                    for experiment_id in experiments:
-                        experiment_data = experiments[experiment_id]
-                        for scan_id in experiment_data.scans:
-                            scan = experiment_data.scans[scan_id]
+                    for session_data in experiments:
+                        for scan in session_data.scans:
                             if any(match_scan(scan, rule) for rule in exclusions):
                                 # This scan should be excluded.
                                 continue
 
-                            scan_path = os.path.join(job.tmpdir, experiment_id, scan_id)
+                            scan_path = os.path.join(job.tmpdir, session_data.label, scan.id)
                             download_scan(scan, scan_path)
                             job.scans[scan.id] = scan_path
             except Exception as exc:

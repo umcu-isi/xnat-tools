@@ -53,10 +53,10 @@ def get_metadata(
             raise KeyError('XNAT project does not exist.')
         project_data = session.projects[project]
 
-        subjects = subjects or [*project_data.subjects]
+        subjects = subjects or list(project_data.subjects.keys())
         for subject in subjects:
             if subject not in project_data.subjects:
-                raise KeyError('XNAT subject does not exist in this project.')
+                raise KeyError('XNAT subject does not exist in this project:', subject)
 
         exclusions = exclusions or []
         for i, subject in enumerate(subjects, 1):
@@ -73,10 +73,8 @@ def get_metadata(
                             results[key][attribute].add(value)
 
             else:
-                for experiment_id in experiments:
-                    experiment_data = experiments[experiment_id]
-                    for scan_id in experiment_data.scans:
-                        scan = experiment_data.scans[scan_id]
+                for session_data in experiments:
+                    for scan in session_data.scans:
                         if any(match_scan(scan, rule) for rule in exclusions):
                             # This scan should be excluded.
                             continue

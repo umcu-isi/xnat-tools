@@ -35,10 +35,10 @@ def match_scan(scan: ImageScanData, rule: Union[RegexRule, FunctionRule]):
     :return: True if the scan matches the given rule and false otherwise.
     """
     if isinstance(rule, Callable):
-        return rule(scan)
+        return rule(scan.data)
     else:
         # scan[attr] might contain None values. Convert those to empty strings.
-        return all(re.match(pattern, scan.get(attr) or '') for attr, pattern in rule.items())
+        return all(re.match(pattern, scan.data.get(attr) or '') for attr, pattern in rule.items())
 
 
 def get_mapped_scans(
@@ -57,10 +57,8 @@ def get_mapped_scans(
     """
     mapped_scans = {key: [] for key in mapping.keys()}
     scan_labels = []
-    for experiment_id in experiments:
-        experiment_data = experiments[experiment_id]
-        for scan_id in experiment_data.scans:
-            scan = experiment_data.scans[scan_id]
+    for session_data in experiments:
+        for scan in session_data.scans:
             if any(match_scan(scan, rule) for rule in exclusions):
                 # This scan should be excluded.
                 continue
@@ -70,7 +68,7 @@ def get_mapped_scans(
                 if match_scan(scan, rule):
                     mapped_scans[key].append(scan)
 
-    # Warn about not unique matches.
+    # Warn about duplicate matches.
     for key, scans in mapped_scans.items():
         if len(scans) > 1:
             labels = [scan_label(scan) for scan in scans]

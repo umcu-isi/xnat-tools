@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xnat-tools"
+version = "0.2"
+authors = [
+    {name = "Edwin Bennink", email = "H.E.Bennink@umcutrecht.nl"}
+]
+description = "Xnat tools for batch processing"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Development Status :: 4 - Beta"]
+requires-python = ">=3.8.10"
+dependencies = [
+    "click>=8.1.3",
+    "xnat~=0.7"
+]
+
+[project.scripts]
+xnat-batch = "xnat_tools.batch_process:batch_process_from_config"
+xnat-metadata = "xnat_tools.get_metadata:get_metadata_from_config"
